@@ -1,0 +1,33 @@
+# Git
+.git
+.gitignore
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Virtual envs
+.venv/
+env/
+venv/
+
+# Build artifacts
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# IDE
+.vscode/
+
+# Data (keep placeholders)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# Not needed in runtime image
+notebooks/
+reports/
