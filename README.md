@@ -1,6 +1,6 @@
 # Gestrix
 
-Gestrix is a research framework for **neuro-symbolic AI planning**.  
+Gestrix is a research framework for **neuro-symbolic AI planning**.
 It combines classical planners (e.g., Fast Downward) with modern neural/LLM reasoning to evaluate and push the boundaries of planning benchmarks like **PlanBench**.
 
 ---

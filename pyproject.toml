@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "gestrix"
+version = "0.0.1"
+description = "Neuro-symbolic AI planning framework"
+authors = ["Ebai Geslen <you@example.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{ include = "gestrix", from = "src" }]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.13"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "*"
+black = "*"
+mypy = "*"
+pytest = "*"
+pre-commit = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+
+[tool.black]
+line-length = 100
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+strict = false
+
+[tool.poetry.scripts]
+gestrix = "gestrix.cli:main"
