@@ -1,3 +1,5 @@
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ebaigeslen/gestrix/blob/main/notebooks/00_colab_bootstrap.ipynb)
+
 # Gestrix
 
 Gestrix is a research framework for **neuro-symbolic AI planning**.
