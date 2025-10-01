@@ -1,27 +1,27 @@
 ## Previous Work References
 
 1. [Capitanelli, Teriyaki, & Mastrogiovanni (2024)](Capitanelli2024_NeuroSymbolicPlanning.pdf) –
-   *A framework for neurosymbolic robot action planning using large language models.*
+   A framework for neurosymbolic robot action planning using large language models.
    DOI: https://doi.org/10.3389/fnbot.2024.1342786 :contentReference[oaicite:0]{index=0}
    (Also available as arXiv preprint: https://arxiv.org/abs/2303.00438) :contentReference[oaicite:1]{index=1}
-   > This work introduces “Teriyaki”, a method to bridge symbolic task planning and LLM generative capabilities for robotics.
+   This work introduces “Teriyaki”, a method to bridge symbolic task planning and LLM generative capabilities for robotics.
 
 2. [Li et al. (2024)](Li2024_FormalLLM.pdf) –
-   *Formal-LLM: Integrating formal language and natural language for controllable LLM-based agents.*
-   arXiv: https://arxiv.org/abs/2403.xxxxx
-   > This proposes combining formal (logical) languages with natural language in LLM agents to enforce more structured and controllable behavior.
+   Formal-LLM: Integrating formal language and natural language for controllable LLM-based agents.
+   arXiv: https://arxiv.org/pdf/2402.00798
+   This proposes combining formal (logical) languages with natural language in LLM agents to enforce more structured and controllable behavior.
 
 3. [Kwon et al. (2024)](Kwon2024_MultiLevelPlanning.pdf) –
-   *Fast and accurate task planning via neuro-symbolic language models and multi-level goal decomposition.*
-   arXiv: https://arxiv.org/abs/2404.xxxxx
-   > The authors present a neuro-symbolic architecture that decomposes high-level goals into subgoals for efficient planning.
+   Fast and accurate task planning via neuro-symbolic language models and multi-level goal decomposition.
+   arXiv: https://arxiv.org/pdf/2409.19250
+   The authors present a neuro-symbolic architecture that decomposes high-level goals into subgoals for efficient planning.
 
 4. [Zhou et al. (2025)](Zhou2025_MetagentP.pdf) –
-   *Metagent-P: A metacognitive reflector with neuro-symbolic verifier for open-world planning.*
+   Metagent-P: A metacognitive reflector with neuro-symbolic verifier for open-world planning.
    ACL Anthology: https://aclanthology.org/2025.findings-acl.1169
    > This introduces a meta-agent that reflects on its own decisions and uses a neuro-symbolic verifier to maintain plan correctness in open-world settings.
 
 5. [Webb, Smith, Patel, & Xu (2023)](Webb2023_MAP.pdf) –
-   *Improving planning with large language models: A modular agentic architecture (MAP).*
+   Improving planning with large language models: A modular agentic architecture (MAP).
    arXiv: https://arxiv.org/abs/2310.00194 :contentReference[oaicite:2]{index=2}
-   > MAP splits planning into specialized modules (decomposition, evaluation, orchestration), each backed by an LLM, improving multi-step reasoning performance.
+   MAP splits planning into specialized modules (decomposition, evaluation, orchestration), each backed by an LLM, improving multi-step reasoning performance.
