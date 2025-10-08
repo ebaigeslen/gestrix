@@ -9,6 +9,9 @@ packages = [{ include = "gestrix", from = "src" }]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.13"
+pydantic-settings = "^2.5"
+python-dotenv = "^1.0"
+typer = {version = "^0.12", extras = ["all"]}
 
 [tool.poetry.group.dev.dependencies]
 ruff = "*"
@@ -16,6 +19,7 @@ black = "*"
 mypy = "*"
 pytest = "*"
 pre-commit = "*"
+pytest-cov = "^7.0.0"
 
 [build-system]
 requires = ["poetry-core"]
