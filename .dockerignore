@@ -1,33 +1,38 @@
-# Git
+﻿# ignore git stuff
 .git
 .gitignore
+.gitattributes
 
-# Python caches
+# python
 __pycache__/
 *.py[cod]
-*.egg-info/
+*.pyo
+*.pyd
+*.so
+*.egg-info
+.dist/
 
-# Virtual envs
+# venvs
 .venv/
-env/
 venv/
 
-# Build artifacts
-dist/
-build/
+# bytecode / cache
+.mypy_cache/
 .pytest_cache/
 .ruff_cache/
-.mypy_cache/
 
-# IDE
-.vscode/
+# notebooks output
+.ipynb_checkpoints/
 
-# Data (keep placeholders)
-data/raw/*
-!data/raw/.gitkeep
-data/processed/*
-!data/processed/.gitkeep
+# docker
+docker-compose*.yml
+docker/
 
-# Not needed in runtime image
-notebooks/
-reports/
+# but KEEP these
+!README.md
+!pyproject.toml
+!poetry.lock
+!src/**
+!tests/**
+!data/**
+!notebooks/**

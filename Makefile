@@ -25,3 +25,13 @@ build:
 
 clean:
 	rm -rf dist .pytest_cache .ruff_cache .mypy_cache
+# --- Docker targets (Day 2) ---
+DOCKER_IMAGE ?= gestrix:dev
+DOCKER_BUILD_ARGS ?=
+.PHONY: docker-build docker-run
+
+docker-build:
+    DOCKER_BUILDKIT=1 docker build $(DOCKER_BUILD_ARGS) -t $(DOCKER_IMAGE) .
+
+docker-run:
+    docker run --rm $(DOCKER_IMAGE)
