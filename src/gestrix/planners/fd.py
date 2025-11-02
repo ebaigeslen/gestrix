@@ -9,6 +9,8 @@ from typing import Optional, Tuple
 
 
 class FastDownwardError(RuntimeError):
+    """Raised when Fast Downward cannot be run or fails."""
+
     pass
 
 
@@ -47,7 +49,6 @@ def run_fd(
         tmp = Path(tmpdir)
         plan_out = tmp / "sas_plan"
 
-        # Build command WITHOUT FD's internal time limit (Windows-incompatible).
         cmd = [
             "python",
             str(fd),
@@ -64,18 +65,24 @@ def run_fd(
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                timeout=timeout_sec,  # enforce timeout in Python
+                timeout=timeout_sec,
                 check=False,
             )
         except subprocess.TimeoutExpired as e:
             raise FastDownwardError(f"FD subprocess timeout ({timeout_sec}s)") from e
 
         if proc.returncode != 0 or not plan_out.exists():
-            msg = f"FD failed (code={proc.returncode}). out:\n{proc.stdout[-500:]}\nerr:\n{proc.stderr[-500:]}"
+            msg = (
+                f"FD failed (code={proc.returncode}). out:\n"
+                f"{proc.stdout[-500:]}\nerr:\n{proc.stderr[-500:]}"
+            )
             raise FastDownwardError(msg)
 
         plan_text = plan_out.read_text(encoding="utf-8", errors="ignore")
+
+        # keep a copy outside the temp dir
         keep_dir = Path(tempfile.mkdtemp(prefix="gestrix-fd-plan-"))
         final_plan = keep_dir / "sas_plan"
         shutil.copy(plan_out, final_plan)
+
         return final_plan, plan_text

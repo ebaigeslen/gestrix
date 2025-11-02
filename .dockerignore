@@ -1,21 +1,38 @@
-﻿# Ignore local and dev files not needed in image
+﻿# ignore git stuff
 .git
 .gitignore
+.gitattributes
+
+# python
 __pycache__/
 *.py[cod]
-*.log
-*.lock
-*.env
-*.venv/
-data/
-notebooks/
-reports/
-tests/
+*.pyo
+*.pyd
+*.so
+*.egg-info
+.dist/
+
+# venvs
+.venv/
+venv/
+
+# bytecode / cache
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# notebooks output
+.ipynb_checkpoints/
+
+# docker
+docker-compose*.yml
 docker/
-scripts/
-dist/
-build/
-*.md
-.idea/
-.vscode/
-.DS_Store
+
+# but KEEP these
+!README.md
+!pyproject.toml
+!poetry.lock
+!src/**
+!tests/**
+!data/**
+!notebooks/**
