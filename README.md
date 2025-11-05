@@ -16,3 +16,10 @@ It combines classical planners (e.g., Fast Downward) with modern neural/LLM reas
 ---
 
 ## Repository Structure
+## Dataset Handling (Day 3)
+
+- **Folders:** `data/raw` (original), `data/interim` (temp), `data/processed` (final/mini), `data/external` (3rd-party drops).
+- **Integrity:** Run `python scripts/gen_checksums.py` after adding/changing raw files. Verify with `make verify-data`.
+- **Licensing:** See **DATA_LICENSES.md**. Never publish data without license info.
+- **CI Mini Sets:** Only 2–3 tiny `.pddl` per domain live in `data/processed/mini/` for fast CI.
+- **Large Data:** Keep out of Git. Use Git LFS or an external mirror (link sources in docs/ADR-002 and DATA_LICENSES.md).

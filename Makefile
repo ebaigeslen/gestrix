@@ -35,3 +35,5 @@ docker-build:
 
 docker-run:
     docker run --rm $(DOCKER_IMAGE)
+preview-data:
+    python scripts/check_pddl_syntax.py

@@ -66,6 +66,11 @@ jobs:
         run: |
           poetry install --with dev
 
+      # ✅ NEW: Dataset verification (mini set only)
+      - name: Verify datasets (mini)
+        run: |
+          make verify-data
+
       # Linux-only: build Fast Downward so smoke test runs
       - name: Setup Fast Downward (Linux)
         if: runner.os == 'Linux'
@@ -92,6 +97,7 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4

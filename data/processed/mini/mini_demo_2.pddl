@@ -1,0 +1,6 @@
+﻿(define (problem mini-2)
+  (:domain demo-domain)
+  (:objects x y)
+  (:init)
+  (:goal (and))
+)
