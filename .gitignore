@@ -82,6 +82,7 @@ ipython_config.py
 
 # pyenv
 .python-version
+!backend/.python-version
 
 # pipenv
 Pipfile.lock
