@@ -111,3 +111,15 @@ Scripts in `scripts/` for:
 - 25 tests (was 9): added `test_db_session`, `test_models`, `test_migrations`, `test_seed` + `conftest` fixtures `tmp_db_url` / `migrated_db` / `db_session`. 100% coverage on `app/models/` and `app/db/`.
 - `.gitignore` excludes `backend/data/` (DB created at runtime, never committed).
 - **Not built yet (out of scope for GES-3):** auth logic, `/admin`, prompt/alias CRUD endpoints, LiteLLM/OpenRouter wiring, the remaining tables (`chats`, `messages`, `runs`, `agent_traces`, `documents`, `api_keys`), frontend, Docker.
+
+### GES-4 — User authentication (signup/signin/signout/me, bcrypt + JWT cookie) — Done 2026-05-24
+
+- PR [#6](https://github.com/ebaigeslen/gestrix/pull/6) (squash `b46ca1a`), branch `feat/ges-4-auth`. `/security-review` run on the diff — clean, no findings.
+- Cookie-based auth: bcrypt password hashing (passlib) + JWT in an **HttpOnly**, `SameSite=lax` cookie (`gestrix_session`; `Secure` in prod).
+- `backend/app/config.py` adds `JWT_SECRET` (**required outside tests** — `model_validator` raises if missing when `ENV != "test"`), `JWT_ALGORITHM` (`HS256`), `JWT_EXPIRY_MINUTES` (10080 / 7 days), `COOKIE_NAME`, `COOKIE_SECURE`, `COOKIE_SAMESITE`. Root `.env.example` documents all settings.
+- `backend/app/auth/` — `password.py` (`hash_password` / `verify_password`, returns False on garbage hash), `tokens.py` (`create_access_token` / `decode_token` → `TokenPayload`, raising `InvalidTokenError`; decode pins `algorithms=[HS256]`), `dependencies.py` (`get_current_user` → 401, `get_current_super_admin` → 403), `schemas.py` (Pydantic; `UserResponse` is a field allowlist that can never serialize `password_hash`).
+- `backend/app/api/auth.py` — `POST /api/auth/signup` (201/409/422), `signin` (200 + cookie / 401 identical message → no user enumeration), `signout` (204, clears cookie), `GET /me` (200/401). Router tag `auth`, wired in `main.py`.
+- Protect future routes with `user: User = Depends(get_current_user)` (or `get_current_super_admin`).
+- Deps added: `python-jose[cryptography]`, `email-validator`; **`bcrypt` pinned `>=4.0,<4.1`** (passlib 1.7.4 is incompatible with bcrypt 5.0). Dev: `types-passlib`, `types-python-jose`. Ruff `flake8-bugbear.extend-immutable-calls` lets FastAPI `Depends()` defaults pass.
+- 61 tests (was 25): `tests/auth/{test_password,test_tokens,test_dependencies}` + `tests/api/{test_auth_endpoints,test_auth_security}` + conftest fixtures `test_user` / `super_admin_user` / `authed_client` / `super_admin_client`. The `client` fixture now overrides `get_db` onto the same migrated temp DB as `db_session`. 100% coverage on `app/auth/`.
+- **Not built yet (out of scope for GES-4):** server-side token revocation/denylist, `/admin`, prompt/alias CRUD, LiteLLM/OpenRouter wiring, the remaining tables, frontend, Docker.
