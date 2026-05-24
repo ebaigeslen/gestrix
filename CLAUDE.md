@@ -78,6 +78,20 @@ Scripts in `scripts/` for:
 
 ## Implementation status
 
+### Summary (as of 2026-05-24)
+
+Backend foundation is complete through **GES-4**; all of GES-1…GES-4 are merged to `main` (the only branch) and Jira-Done. Per-ticket detail follows below.
+
+**What works today:**
+- FastAPI app (`create_app()` factory, `app/main.py`) with `GET /api/health`.
+- SQLite + SQLAlchemy 2.0 + Alembic. Three tables — `users`, `prompts`, `model_aliases` — with `(name, version)` uniqueness and a partial-unique "one active row per name" index. The 6 MVP model aliases are seeded. The app auto-runs `alembic upgrade head` on startup.
+- Cookie + JWT authentication: `POST /api/auth/{signup,signin,signout}`, `GET /api/auth/me`. bcrypt (passlib) hashing, JWT in an HttpOnly/`SameSite=lax` cookie. Reusable deps `get_current_user` (401) and `get_current_super_admin` (403) gate future routes.
+- Quality bar: ruff + mypy `strict`, **61 passing tests**, 100% coverage on `app/auth/`, `app/models/`, `app/db/`. `/security-review` is run on auth-touching diffs before merge.
+
+**Config / settings:** `APP_NAME`, `APP_VERSION`, `ENV`, `DATABASE_URL`, `DATA_DIR`, `JWT_SECRET` (required outside tests), `JWT_ALGORITHM`, `JWT_EXPIRY_MINUTES`, `COOKIE_NAME`, `COOKIE_SECURE`, `COOKIE_SAMESITE` — all documented in root `.env.example`.
+
+**Not built yet (future tickets):** remaining DB tables (`chats`, `messages`, `runs`, `agent_traces`, `documents`, `api_keys`), LiteLLM-via-OpenRouter wiring, the agent team (Orchestrator/Writer/Naming/Keyword/Researcher/Evaluator), prompt + model-alias CRUD, `/admin` UI, server-side token revocation, frontend (Next.js), Docker packaging.
+
 ### GES-2 — FastAPI backend bootstrap — Done 2026-05-20
 
 - PR [#4](https://github.com/ebaigeslen/gestrix/pull/4) (squash `cff82d6`)
