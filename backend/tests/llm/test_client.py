@@ -2,7 +2,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
-from litellm.exceptions import APIError
+from litellm.exceptions import APIError, RateLimitError
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -70,6 +70,18 @@ def test_chat_completion_wraps_litellm_error_as_llmcallerror(
         chat_completion(db_session, "writer-default", MESSAGES)
     assert exc.value.__cause__ is original
     assert exc.value.model == "openrouter/openai/gpt-4o"
+
+
+def test_chat_completion_wraps_non_apierror_litellm_errors(
+    db_session: Session, mock_litellm: MagicMock
+) -> None:
+    # RateLimitError is NOT a subclass of litellm.exceptions.APIError; it must
+    # still be wrapped as LLMCallError (guards the broad-catch fix).
+    original = RateLimitError(message="slow down", llm_provider="openrouter", model="x")
+    mock_litellm.side_effect = original
+    with pytest.raises(LLMCallError) as exc:
+        chat_completion(db_session, "writer-default", MESSAGES)
+    assert exc.value.__cause__ is original
 
 
 def test_chat_completion_structured_passes_response_format(

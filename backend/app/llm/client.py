@@ -1,7 +1,6 @@
 from typing import Any, cast
 
 import litellm
-from litellm.exceptions import APIError as LiteLLMAPIError
 from pydantic import BaseModel, ValidationError
 from sqlalchemy.orm import Session
 
@@ -15,7 +14,14 @@ from app.llm.exceptions import LLMCallError, LLMStructuredOutputError
 
 
 def _completion(provider_model: str, messages: list[dict[str, Any]], **kwargs: Any) -> Any:
-    """Single funnel for every LiteLLM call. Wraps provider errors as LLMCallError."""
+    """Single funnel for every LiteLLM call. Wraps any call failure as LLMCallError.
+
+    litellm's exception classes (RateLimitError, Timeout, AuthenticationError, ...)
+    derive from the OpenAI SDK's exception tree, not from a single litellm base, so
+    there is no reliable litellm-only base to catch. Since the only statement in the
+    try is the provider call (alias resolution happens earlier, outside), catching
+    Exception here cleanly normalizes every provider/network failure.
+    """
     settings = Settings()
     try:
         return litellm.completion(
@@ -31,7 +37,7 @@ def _completion(provider_model: str, messages: list[dict[str, Any]], **kwargs: A
             },
             **kwargs,
         )
-    except LiteLLMAPIError as exc:
+    except Exception as exc:
         raise LLMCallError(
             f"LLM call failed for model {provider_model!r}: {exc}",
             model=provider_model,
