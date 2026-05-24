@@ -12,6 +12,11 @@ dependencies = [
     "alembic>=1.14",
     "aiosqlite>=0.20",
     "passlib[bcrypt]>=1.7",
+    # passlib 1.7.4 is incompatible with bcrypt >= 4.1 (its backend probe trips
+    # bcrypt's 72-byte limit). Pin to the 4.0.x line until passlib ships a fix.
+    "bcrypt>=4.0,<4.1",
+    "python-jose[cryptography]>=3.3",
+    "email-validator>=2.2",
 ]
 
 [dependency-groups]
@@ -22,6 +27,8 @@ dev = [
     "httpx>=0.28",
     "ruff>=0.9",
     "mypy>=1.13",
+    "types-passlib>=1.7",
+    "types-python-jose>=3.3",
 ]
 
 [tool.ruff]
@@ -30,6 +37,17 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI dependency-injection markers are designed to be called in defaults.
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.Cookie",
+    "fastapi.Header",
+]
 
 [tool.mypy]
 python_version = "3.12"
