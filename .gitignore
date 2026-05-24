@@ -146,6 +146,9 @@ cython_debug/
 # FastAPI / Uvicorn
 *.pid
 
+# SQLite database (created at runtime, never committed)
+backend/data/
+
 # IDEs
 .idea/
 .vscode/
