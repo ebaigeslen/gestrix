@@ -80,17 +80,18 @@ Scripts in `scripts/` for:
 
 ### Summary (as of 2026-05-24)
 
-Backend foundation is complete through **GES-4**; all of GES-1…GES-4 are merged to `main` (the only branch) and Jira-Done. Per-ticket detail follows below.
+Backend foundation is complete through **GES-5**; all of GES-1…GES-5 are merged to `main` (the only branch) and Jira-Done. Per-ticket detail follows below.
 
 **What works today:**
 - FastAPI app (`create_app()` factory, `app/main.py`) with `GET /api/health`.
 - SQLite + SQLAlchemy 2.0 + Alembic. Three tables — `users`, `prompts`, `model_aliases` — with `(name, version)` uniqueness and a partial-unique "one active row per name" index. The 6 MVP model aliases are seeded. The app auto-runs `alembic upgrade head` on startup.
 - Cookie + JWT authentication: `POST /api/auth/{signup,signin,signout}`, `GET /api/auth/me`. bcrypt (passlib) hashing, JWT in an HttpOnly/`SameSite=lax` cookie. Reusable deps `get_current_user` (401) and `get_current_super_admin` (403) gate future routes.
-- Quality bar: ruff + mypy `strict`, **61 passing tests**, 100% coverage on `app/auth/`, `app/models/`, `app/db/`. `/security-review` is run on auth-touching diffs before merge.
+- LLM gateway: `app/llm/` funnels every call through LiteLLM→OpenRouter. `resolve_alias` maps an alias to the active `provider_model`; `chat_completion` / `chat_completion_structured` are the only call paths; `GET /api/models` (auth) lists active aliases. Guardrail tests enforce "only `app/llm/client.py` imports litellm" and "no raw model strings outside the DB".
+- Quality bar: ruff + mypy `strict`, **83 passing tests** (+1 deselected live integration), 100% coverage on `app/auth/`, `app/models/`, `app/db/`, `app/llm/`. `/security-review` on auth-touching diffs, `/review` before merge.
 
-**Config / settings:** `APP_NAME`, `APP_VERSION`, `ENV`, `DATABASE_URL`, `DATA_DIR`, `JWT_SECRET` (required outside tests), `JWT_ALGORITHM`, `JWT_EXPIRY_MINUTES`, `COOKIE_NAME`, `COOKIE_SECURE`, `COOKIE_SAMESITE` — all documented in root `.env.example`.
+**Config / settings:** `APP_NAME`, `APP_VERSION`, `ENV`, `DATABASE_URL`, `DATA_DIR`, `JWT_SECRET` (required outside tests), `JWT_ALGORITHM`, `JWT_EXPIRY_MINUTES`, `COOKIE_NAME`, `COOKIE_SECURE`, `COOKIE_SAMESITE`, `OPENROUTER_API_KEY` (required outside tests), `OPENROUTER_BASE_URL`, `LLM_DEFAULT_TIMEOUT_SECONDS`, `LLM_MAX_RETRIES`, `OPENROUTER_REFERER`, `OPENROUTER_APP_TITLE` — all documented in root `.env.example`.
 
-**Not built yet (future tickets):** remaining DB tables (`chats`, `messages`, `runs`, `agent_traces`, `documents`, `api_keys`), LiteLLM-via-OpenRouter wiring, the agent team (Orchestrator/Writer/Naming/Keyword/Researcher/Evaluator), prompt + model-alias CRUD, `/admin` UI, server-side token revocation, frontend (Next.js), Docker packaging.
+**Not built yet (future tickets):** remaining DB tables (`chats`, `messages`, `runs`, `agent_traces`, `documents`, `api_keys`), the agent team (Orchestrator/Writer/Naming/Keyword/Researcher/Evaluator) and Pydantic AI orchestration, prompt + model-alias CRUD, `/admin` UI, server-side token revocation, frontend (Next.js), Docker packaging.
 
 ### GES-2 — FastAPI backend bootstrap — Done 2026-05-20
 
@@ -137,3 +138,17 @@ Backend foundation is complete through **GES-4**; all of GES-1…GES-4 are merge
 - Deps added: `python-jose[cryptography]`, `email-validator`; **`bcrypt` pinned `>=4.0,<4.1`** (passlib 1.7.4 is incompatible with bcrypt 5.0). Dev: `types-passlib`, `types-python-jose`. Ruff `flake8-bugbear.extend-immutable-calls` lets FastAPI `Depends()` defaults pass.
 - 61 tests (was 25): `tests/auth/{test_password,test_tokens,test_dependencies}` + `tests/api/{test_auth_endpoints,test_auth_security}` + conftest fixtures `test_user` / `super_admin_user` / `authed_client` / `super_admin_client`. The `client` fixture now overrides `get_db` onto the same migrated temp DB as `db_session`. 100% coverage on `app/auth/`.
 - **Not built yet (out of scope for GES-4):** server-side token revocation/denylist, `/admin`, prompt/alias CRUD, LiteLLM/OpenRouter wiring, the remaining tables, frontend, Docker.
+
+### GES-5 — LiteLLM via OpenRouter: alias resolution, structured output, GET /api/models — Done 2026-05-24
+
+- PR [#7](https://github.com/ebaigeslen/gestrix/pull/7) (squash `b861e9e`), branch `feat/ges-5-llm-wiring`. `/review` run — found one real bug (see below), fixed before merge.
+- **The single LLM gateway.** Every call goes through `app/llm/`; agents reference an alias, never a provider model string.
+- `backend/app/llm/aliases.py` — `resolve_alias(db, alias_name) -> str` (active row only, raises `AliasNotFoundError`); `list_aliases(db) -> list[ModelAliasView]` (Pydantic view `alias_name`/`provider_model`/`version`/`updated_at`). One SELECT each.
+- `backend/app/llm/exceptions.py` — `LLMError` base + `AliasNotFoundError`, `LLMCallError` (carries `model`, wraps cause), `LLMStructuredOutputError`.
+- `backend/app/llm/client.py` — **the only module allowed to import `litellm`.** `chat_completion(db, alias, messages, **kw) -> dict` (raw response) and `chat_completion_structured(..., response_model) -> BaseModel`. Calls `litellm.completion` with OpenRouter api key/base, timeout, `num_retries`, and `HTTP-Referer`/`X-Title` headers.
+- `backend/app/api/models.py` — `GET /api/models` (auth via `get_current_user`) → `list[ModelAliasView]`, tag `models`; wired in `main.py`.
+- `backend/app/config.py` adds `OPENROUTER_API_KEY` (**required outside tests**, same validator as `JWT_SECRET`), `OPENROUTER_BASE_URL`, `LLM_DEFAULT_TIMEOUT_SECONDS`, `LLM_MAX_RETRIES`, `OPENROUTER_REFERER`, `OPENROUTER_APP_TITLE`. `.env.example` updated.
+- **Error-wrapping gotcha (fixed in review):** litellm's `RateLimitError`/`Timeout`/`AuthenticationError`/etc. derive from the OpenAI SDK tree, **not** `litellm.exceptions.APIError`, so catching only `APIError` missed them. `_completion` now catches any failure from the single wrapped `litellm.completion()` call (alias resolution is outside the `try`).
+- **Hard rules (guardrail tests in `tests/llm/test_guardrails.py`):** only `app/llm/client.py` imports `litellm`; no raw `openrouter/...` model strings anywhere outside `app/llm/`.
+- 83 tests (was 61): `tests/llm/{test_aliases,test_client,test_guardrails,test_openrouter_live}` + `tests/api/test_models_endpoint` + `mock_litellm` fixture. The live OpenRouter test is `@pytest.mark.integration` + skipif-no-key, deselected by default (`addopts = -m 'not integration'`); run via `uv run pytest -m integration`. 100% coverage on `app/llm/`. Deps: `litellm` (+ mypy override, it ships no types).
+- **Not built yet (out of scope for GES-5):** the agents themselves + Pydantic AI orchestration, `/admin` alias-swap UI, prompt wiring, the remaining tables, frontend, Docker.
