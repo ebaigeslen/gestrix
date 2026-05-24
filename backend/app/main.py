@@ -6,6 +6,7 @@ from fastapi import FastAPI
 
 from app.api.auth import router as auth_router
 from app.api.health import router as health_router
+from app.api.models import router as models_router
 from app.config import Settings
 from app.db.migrate import run_upgrade
 
@@ -24,6 +25,7 @@ def create_app() -> FastAPI:
     app = FastAPI(title=settings.APP_NAME, version=settings.APP_VERSION, lifespan=lifespan)
     app.include_router(health_router)
     app.include_router(auth_router)
+    app.include_router(models_router)
     return app
 
 
