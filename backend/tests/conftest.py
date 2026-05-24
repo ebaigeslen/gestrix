@@ -8,6 +8,7 @@ os.environ.setdefault("JWT_SECRET", "test-secret-key-not-for-prod")
 from collections.abc import Iterator  # noqa: E402
 from pathlib import Path  # noqa: E402
 from typing import NamedTuple  # noqa: E402
+from unittest.mock import MagicMock  # noqa: E402
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
@@ -129,3 +130,11 @@ def super_admin_client(client: TestClient, super_admin_user: CreatedUser) -> Tes
     )
     assert resp.status_code == 200
     return client
+
+
+@pytest.fixture(scope="function")
+def mock_litellm(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    """Patch `litellm.completion`; tests set `.return_value` / `.side_effect`."""
+    mock = MagicMock()
+    monkeypatch.setattr("litellm.completion", mock)
+    return mock

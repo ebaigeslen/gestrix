@@ -85,3 +85,44 @@ def handler(user: User = Depends(get_current_user)): ...        # 401 if not sig
 @router.get("/admin-only")
 def admin(user: User = Depends(get_current_super_admin)): ...    # 403 if not super admin
 ```
+
+## LLM
+
+All LLM calls go through **LiteLLM pointed at OpenRouter**, behind one funnel in
+`app/llm/`. Agents never see a provider model string — they reference an
+**alias** (e.g. `writer-default`), which is resolved to the active
+`provider_model` from the `model_aliases` table at call time. Super admin can
+swap an alias's model (insert a new active row) with no redeploy.
+
+```python
+from app.db.session import SessionLocal
+from app.llm.client import chat_completion, chat_completion_structured
+
+with SessionLocal() as db:
+    # Plain chat completion — returns the raw LiteLLM response.
+    resp = chat_completion(db, "writer-default",
+                           [{"role": "user", "content": "Write a tagline."}])
+    text = resp["choices"][0]["message"]["content"]
+
+    # Structured output — parsed into a Pydantic model.
+    result = chat_completion_structured(db, "writer-default", messages, MySchema)
+```
+
+Errors are normalized: `AliasNotFoundError` (no active alias),
+`LLMCallError` (provider/network failure, wraps the cause),
+`LLMStructuredOutputError` (response didn't parse). All extend `LLMError`.
+
+`GET /api/models` (auth required) returns the active aliases as
+`{alias_name, provider_model, version, updated_at}` — never any keys.
+
+**Two hard rules (enforced by `tests/llm/test_guardrails.py`):**
+1. Only `app/llm/client.py` may import `litellm`.
+2. No raw `openrouter/...` model strings anywhere outside the `model_aliases`
+   table — reference models by alias.
+
+Settings: `OPENROUTER_API_KEY` is **required** outside tests; plus
+`OPENROUTER_BASE_URL`, `LLM_DEFAULT_TIMEOUT_SECONDS`, `LLM_MAX_RETRIES`,
+`OPENROUTER_REFERER`, `OPENROUTER_APP_TITLE` (see `.env.example`).
+
+The live OpenRouter test is marked `integration` and skipped by default; run it
+with a real key via `uv run pytest -m integration`.
