@@ -18,6 +18,9 @@ dependencies = [
     "python-jose[cryptography]>=3.3",
     "email-validator>=2.2",
     "litellm>=1.55",
+    # Required by litellm's retry path (we pass num_retries); litellm does not
+    # pull it in, so without it any retryable error raises ModuleNotFoundError.
+    "tenacity>=8.0",
 ]
 
 [dependency-groups]
